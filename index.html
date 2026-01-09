@@ -1,43 +1,133 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Confession</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            text-align: center;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #d9534f;
-        }
-        p.confession {
-            font-style: italic;
-            font-size: 1.2em;
-            margin: 20px 0;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Share a Confession — my-confession-site</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    body{max-width:760px;margin:2rem auto;padding:1rem}
+    h1{font-size:1.4rem;margin-bottom:.25rem}
+    .card{border:1px solid #ddd;padding:1rem;border-radius:8px;background:#fff}
+    textarea{width:100%;min-height:90px;margin-top:.5rem;padding:.5rem;font-size:1rem}
+    .controls{display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+    .btn{padding:.45rem .7rem;border-radius:6px;border:1px solid #bbb;background:#f6f6f6;cursor:pointer}
+    .btn.primary{background:#0366d6;color:#fff;border-color:#0356b6}
+    .linkbox{margin-top:.6rem;padding:.5rem;background:#f1f8ff;border-radius:6px;word-break:break-all}
+    .message{white-space:pre-wrap;font-size:1.05rem;margin-top:.6rem}
+    small{color:#555}
+  </style>
 </head>
-<body>
-    <div class="container">
-        <h1>My Confession</h1>
-        <p>Here's my personal confession:</p>
-        <p class="confession">[Hey,
-I just want to be straight up with you. I like you, and I have for a while now. I really like your smile and the way you carry yourself, and being around you just feels different in a good way.
-I don’t know where this will go, but I didn’t want to keep this to myself anymore. Whatever your answer is, I respect it. I just wanted you to know how I feel.]</p>
-        <p><small>This is a private page for reflection. Share responsibly.</small></p>
-    </div>
+<body class="card">
+  <h1>Share a message</h1>
+  <p><small>Type a message, generate a link and send it to a friend. The message is encoded in the link — nothing is stored on a server.</small></p>
+
+  <label for="message">Your message</label>
+  <textarea id="message" placeholder="Write something..."></textarea>
+
+  <div class="controls">
+    <button id="create" class="btn primary">Create shareable link</button>
+    <button id="copy" class="btn">Copy link</button>
+    <button id="open" class="btn">Open preview</button>
+    <button id="share" class="btn">Share (native)</button>
+  </div>
+
+  <div id="linkbox" class="linkbox" style="display:none"></div>
+
+  <h2 style="margin-top:1rem">Preview</h2>
+  <div id="preview" class="message">No message yet.</div>
+
+  <script>
+    const elMessage = document.getElementById('message');
+    const btnCreate = document.getElementById('create');
+    const btnCopy = document.getElementById('copy');
+    const btnOpen = document.getElementById('open');
+    const btnShare = document.getElementById('share');
+    const linkbox = document.getElementById('linkbox');
+    const preview = document.getElementById('preview');
+
+    // Read message from ?m= or #m= and display
+    function readMessageFromLocation() {
+      const params = new URLSearchParams(window.location.search);
+      let raw = params.get('m');
+      if (!raw && location.hash) {
+        const h = location.hash.replace(/^#/, '');
+        if (h.startsWith('m=')) raw = decodeURIComponent(h.slice(2));
+      }
+      if (raw) {
+        try {
+          // decode (some senders may double-encode)
+          const decoded = decodeURIComponent(raw);
+          preview.textContent = decoded;
+          return decoded;
+        } catch(e) {
+          preview.textContent = raw;
+          return raw;
+        }
+      } else {
+        preview.textContent = 'No message yet.';
+        return '';
+      }
+    }
+
+    // Generate shareable URL using ?m= with encodeURIComponent
+    function generateURL(message) {
+      const base = location.origin + location.pathname; // site root page
+      const enc = encodeURIComponent(message);
+      return `${base}?m=${enc}`;
+    }
+
+    btnCreate.addEventListener('click', () => {
+      const msg = elMessage.value.trim();
+      if (!msg) { alert('Please type a message'); return; }
+      const url = generateURL(msg);
+      linkbox.style.display = 'block';
+      linkbox.textContent = url;
+      preview.textContent = msg;
+    });
+
+    btnCopy.addEventListener('click', async () => {
+      const url = linkbox.textContent || '';
+      if (!url) { alert('Generate a link first'); return; }
+      try {
+        await navigator.clipboard.writeText(url);
+        btnCopy.textContent = 'Copied!';
+        setTimeout(()=> btnCopy.textContent = 'Copy link', 1500);
+      } catch(e) {
+        alert('Copy failed — you can select and copy the link manually.');
+      }
+    });
+
+    btnOpen.addEventListener('click', () => {
+      const url = linkbox.textContent || '';
+      if (!url) { alert('Generate a link first'); return; }
+      window.open(url, '_blank');
+    });
+
+    btnShare.addEventListener('click', async () => {
+      const url = linkbox.textContent || '';
+      if (!url) { alert('Generate a link first'); return; }
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'A message for you', text: elMessage.value, url });
+        } catch(_) {}
+      } else {
+        alert('Native share not supported — use copy link instead.');
+      }
+    });
+
+    // Populate message textarea if page has a message
+    window.addEventListener('load', () => {
+      const msg = readMessageFromLocation();
+      if (msg) elMessage.value = msg;
+    });
+
+    // Support pressing Ctrl+Enter or Cmd+Enter to create link
+    elMessage.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        btnCreate.click();
+      }
+    });
+  </script>
 </body>
 </html>
