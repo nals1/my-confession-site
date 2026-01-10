@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Confessions — extra cute (sakura, photos, music)</title>
+  <meta name="description" content="Create a private decorated message link with custom music and photo. No accounts." />
+  <style>
+    :root{
+      --bg:#fff6fb;
+      --card-bg: rgba(255,255,255,0.72);
+      --card-border: rgba(10,20,30,0.03);
+      --accent:#ff7aa2;
+      --accent-2:#ffbfdc;
+      --muted:#6b7280;
+      --text:#111827;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#fff,#fff6fb);color:var(--text);-webkit-font-smoothing:antialiased}
+    /* background video */
+    #bgVideo{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;filter:brightness(0.68) saturate(1.05) blur(2px);pointer-events:none;display:none}
+    /* sakura trees */
+    .sakura-left{position:fixed;left:6px;bottom:6px;width:220px;height:auto;opacity:0.98;z-index:0;pointer-events:none;transform:translateX(-6px)}
+    .sakura-right{position:fixed;right:6px;top:40px;width:220px;height:auto;opacity:0.98;z-index:0;pointer-events:none;transform:translateX(6px)}
+    .sakura-top{position:fixed;left:50%;top:-18px;width:420px;height:auto;opacity:0.9;transform:translateX(-50%);z-index:0;pointer-events:none}
+    .sway { transform-origin: 50% 100%; animation: sway 6s ease-in-out infinite; }
+    @keyframes sway { 0%{transform: rotate(-1deg)} 50%{transform: rotate(1deg)} 100%{transform: rotate(-1deg)} }
+
+    /* floating emoji confetti */
+    .float-layer{pointer-events:none;position:fixed;inset:0;overflow:hidden;z-index:0}
+    .float { position:absolute;font-size:28px;opacity:.95;filter:drop-shadow(0 6px 14px rgba(11,18,32,0.06));animation-timing-function: linear;animation-iteration-count: infinite; }
+
+    /* app card */
+    .wrap{position:relative;max-width:980px;margin:2rem auto;padding:1rem;z-index:2}
+    .card{position:relative;background:var(--card-bg);border-radius:18px;padding:1.2rem;box-shadow:0 26px 70px rgba(10,20,30,0.10);border:1px solid var(--card-border);backdrop-filter: blur(8px)}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.6rem}
+    .brand{display:flex;align-items:center;gap:.7rem}
+    .logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:22px;box-shadow:0 12px 36px rgba(255,122,162,0.10)}
+    h1{margin:0;font-size:1.35rem}
+    .sub{color:var(--muted);font-size:.95rem}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:1rem}
+    label{display:block;font-weight:700;margin-bottom:.25rem}
+    input[type=text], textarea, select{width:100%;padding:.66rem;border-radius:12px;border:1px solid rgba(14,30,50,0.06);font-size:1rem;background:rgba(255,255,255,0.85)}
+    textarea{min-height:120px;resize:vertical}
+    .btn{background:#fff;border:1px solid rgba(11,18,32,0.06);padding:.55rem .85rem;border-radius:14px;cursor:pointer;font-weight:800}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;border:none;box-shadow:0 12px 36px rgba(255,122,162,0.10)}
+    .linkbox{background:linear-gradient(180deg,#fff,#fff6fb);padding:.7rem;border-radius:12px;margin-top:.8rem;font-size:.95rem;word-break:break-all;border:1px dashed rgba(11,18,32,0.06)}
+    .msg{white-space:pre-wrap;padding:1rem;border-radius:16px;background:linear-gradient(180deg,rgba(255,182,201,0.06),rgba(255,206,230,0.03));border:1px solid rgba(255,107,154,0.06);font-size:1rem;line-height:1.45}
+    .tiny{font-size:.9rem;color:var(--muted)}
+    .flower-field{display:flex;flex-wrap:wrap;gap:.35rem;padding:.6rem;border-radius:12px;background:linear-gradient(180deg,#fff6fb,#fffafc);border:1px solid rgba(11,18,32,0.03);min-height:90px;align-items:flex-end;justify-content:center}
+    .flower-field span{font-size:28px;transform-origin:center;animation:wiggle 6s ease-in-out infinite}
+    .flower-field span:nth-child(odd){animation-duration:7s}
+    .flower-field span:nth-child(3n){animation-duration:5.5s}
+    @keyframes wiggle {0%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(-6deg)}100%{transform:translateY(0) rotate(0)}}
+
+    /* photo preview - much bigger */
+    .photo-preview{display:flex;flex-direction:column;gap:.5rem;align-items:center;padding:.6rem;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.4));border:1px solid rgba(11,18,32,0.04)}
+    .photo-thumb{width:100%;height:420px;border-radius:12px;object-fit:cover;border:1px solid rgba(11,18,32,0.06);background:linear-gradient(180deg,#fff,#fffafc);display:block}
+    .photo-actions{display:flex;gap:.5rem;width:100%;justify-content:center}
+    footer{margin-top:1rem;text-align:center;color:var(--muted);font-size:.88rem}
+
+    .bunny{position:fixed;right:16px;bottom:12px;font-size:44px;z-index:1;opacity:.95;pointer-events:none;transform:translateY(6px)}
+    @media (max-width:920px){ .grid{grid-template-columns:1fr} .sakura-left,.sakura-right{display:none} .logo{width:44px;height:44px} .bunny{display:none} .photo-thumb{height:260px} }
+  </style>
+</head>
+<body>
+  <video id="bgVideo" muted playsinline autoplay loop crossorigin="anonymous"></video>
+
+  <!-- animated sakura trees -->
+  <svg class="sakura-left sway" viewBox="0 0 200 420" aria-hidden="true">
+    <g transform="translate(12,12)">
+      <path d="M18 330 C 50 240, 110 250, 140 200 C 170 150, 120 120, 110 100" stroke="#c06" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <g fill="#ffd7ea" stroke="#ff7aa2" stroke-width="0.6">
+        <ellipse cx="50" cy="250" rx="10" ry="11" transform="rotate(-15 50 250)"/>
+        <ellipse cx="80" cy="220" rx="12" ry="13"/>
+        <ellipse cx="118" cy="190" rx="10" ry="11" transform="rotate(18 118 190)"/>
+        <ellipse cx="140" cy="140" rx="13" ry="14"/>
+        <ellipse cx="105" cy="72" rx="11" ry="12"/>
+      </g>
+    </g>
+  </svg>
+
+  <svg class="sakura-right sway" viewBox="0 0 200 420" aria-hidden="true">
+    <g transform="translate(12,8)">
+      <path d="M190 320 C 170 230, 110 220, 80 170 C 50 120, 100 90, 120 70" stroke="#d05" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <g fill="#ffd1e6" stroke="#ff88b2" stroke-width="0.6">
+        <ellipse cx="40" cy="240" rx="11" ry="12"/><ellipse cx="70" cy="200" rx="12" ry="13"/><ellipse cx="120" cy="160" rx="13" ry="14"/><ellipse cx="150" cy="110" rx="10" ry="11"/>
+      </g>
+    </g>
+  </svg>
+
+  <svg class="sakura-top sway" viewBox="0 0 800 120" aria-hidden="true">
+    <g transform="translate(0,0)">
+      <g fill="#ffe6f0" stroke="#ffb6d5" stroke-width=".6">
+        <ellipse cx="80" cy="40" rx="18" ry="18"/><ellipse cx="160" cy="20" rx="14" ry="14"/><ellipse cx="240" cy="38" rx="16" ry="16"/><ellipse cx="320" cy="22" rx="12" ry="12"/><ellipse cx="420" cy="40" rx="18" ry="18"/><ellipse cx="520" cy="30" rx="14" ry="14"/><ellipse cx="640" cy="26" rx="16" ry="16"/>
+      </g>
+    </g>
+  </svg>
+
+  <div id="floatLayer" class="float-layer" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="card" role="main" aria-label="Confessions app">
+      <header>
+        <div class="brand">
+          <div class="logo">♡</div>
+          <div>
+            <h1>Confessions</h1>
+            <div class="sub tiny">Pretty, private links — extra cute.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.36rem;min-width:260px">
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <input id="musicUrl" type="text" placeholder="Paste music URL (mp3/ogg)" aria-label="Music URL" />
+            <button id="musicToggle" class="btn" aria-pressed="false">Play</button>
+          </div>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <input id="musicVol" type="range" min="0" max="1" step="0.01" value="0.28" aria-label="Music volume" style="flex:1" />
+            <input id="bgUrl" type="text" placeholder="(Optional) background video URL" aria-label="Background video URL" style="width:160px" />
+          </div>
+        </div>
+      </header>
+
+      <div class="grid">
+        <main>
+          <section id="composer" style="padding:.9rem;border-radius:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:800">Create a private decorated message</div>
+              <div class="tiny">Link stores message + media + key (if encrypted). Keep it private.</div>
+            </div>
+
+            <div style="margin-top:.7rem">
+              <label for="recipient">Recipient (ex: "Jamie — my crush")</label>
+              <input id="recipient" type="text" placeholder="Ex: Jamie (Crush)" />
+            </div>
+
+            <div style="margin-top:.6rem">
+              <label for="message">Message</label>
+              <textarea id="message" placeholder="Write something sweet..." rows="5"></textarea>
+            </div>
+
+            <!-- large inline composer preview of uploaded photo -->
+            <div id="composerPhotoWrap" style="margin-top:.6rem;display:none">
+              <img id="composerPhoto" alt="photo preview" style="width:100%;max-height:520px;object-fit:cover;border-radius:12px;border:1px solid rgba(11,18,32,0.06)" />
+            </div>
+
+            <div style="margin-top:.6rem;display:flex;gap:.6rem;align-items:center">
+              <input id="encrypt" type="checkbox" checked /> <label for="encrypt" class="tiny">Encrypt message (recommended)</label>
+              <div style="flex:1"></div>
+              <div class="tiny">Shorter messages → shorter links.</div>
+            </div>
+
+            <div style="margin-top:.8rem">
+              <label>Stickers / decorations (pick to include)</label>
+              <div id="stickerGrid" class="sticker-grid" aria-label="Sticker picker">
+                <button class="sticker" data-s="🌸" type="button">🌸</button>
+                <button class="sticker" data-s="🌼" type="button">🌼</button>
+                <button class="sticker" data-s="💖" type="button">💖</button>
+                <button class="sticker" data-s="✨" type="button">✨</button>
+                <button class="sticker" data-s="🐻" type="button">🐻</button>
+                <button class="sticker" data-s="🍓" type="button">🍓</button>
+                <button class="sticker" data-s="🍭" type="button">🍭</button>
+                <button class="sticker" data-s="🍥" type="button">🍥</button>
+              </div>
+              <div class="tiny" style="margin-top:.45rem">Stickers will appear in the flower field for recipients if you include them.</div>
+            </div>
+
+            <div style="margin-top:.9rem;display:flex;gap:.6rem;align-items:center">
+              <button id="btn-create" class="btn primary">Create & copy link</button>
+              <button id="btn-open" class="btn">Create & open</button>
+              <button id="btn-share" class="btn">Share (native)</button>
+              <div style="flex:1"></div>
+            </div>
+
+            <div id="linkbox" class="linkbox" style="display:none"></div>
+          </section>
+
+          <section id="viewer" style="display:none;margin-top:.9rem;padding:.9rem;border-radius:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:800">Message preview</div>
+              <div style="display:flex;gap:.5rem;align-items:center">
+                <button id="btn-back" class="btn">Back</button>
+              </div>
+            </div>
+
+            <div id="previewRecipient" class="tiny" style="margin-top:.4rem"></div>
+
+            <div id="flowerField" class="flower-field" style="margin-top:.6rem;display:none" aria-hidden="false"></div>
+
+            <img id="viewerImage" alt="photo preview" style="display:none;width:100%;max-height:720px;object-fit:cover;border-radius:12px;margin-top:.6rem;border:1px solid rgba(11,18,32,0.06)" />
+
+            <div id="previewMessage" class="msg" style="margin-top:.6rem">...</div>
+
+            <div class="tiny" style="margin-top:.5rem">Use the Play button at the top to start the music (user gesture required).</div>
+          </section>
+        </main>
+
+        <aside>
+          <div style="display:flex;flex-direction:column;gap:.8rem">
+            <div class="photo-preview">
+              <div style="font-weight:700">Add a cute photo</div>
+              <input id="photoInput" type="file" accept="image/*" aria-label="Upload a photo" />
+              <!-- aside thumb still useful for quick review -->
+              <img id="photoThumb" class="photo-thumb" alt="photo preview" style="display:none" />
+              <div class="photo-actions">
+                <button id="removePhoto" class="btn" style="display:none">Remove</button>
+                <div class="tiny" style="max-width:260px;text-align:center">Photos are embedded in the link (resized client-side). Keep images reasonably small — very large images create very long links.</div>
+              </div>
+            </div>
+
+            <div style="padding:.9rem;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0.9));border:1px solid rgba(11,18,32,0.03)">
+              <div style="font-weight:700">Quick tips</div>
+              <div class="tiny" style="margin-top:.5rem">Paste a direct music file URL (mp3/ogg). Background video (muted) is optional. Keep the full link private — it contains everything needed to view and decrypt.</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <footer>
+        <small class="tiny">Host on GitHub Pages (main/root). I can't provide copyrighted clips — paste a background video URL you have rights to or use a free clip.</small>
+      </footer>
+    </div>
+  </div>
+
+  <div class="bunny">🐰</div>
+
+  <script>
+    /* ---------- helpers: base64url, crypto ---------- */
+    function b64UrlEncode(bytes){ return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+    function b64UrlDecodeToUint8(s){ s = s.replace(/-/g,'+').replace(/_/g,'/'); while (s.length % 4) s += '='; const bin = atob(s); const u = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; }
+    async function generateAesRaw(){ const key = await crypto.subtle.generateKey({name:'AES-GCM',length:256}, true, ['encrypt','decrypt']); const raw = await crypto.subtle.exportKey('raw', key); return new Uint8Array(raw); }
+    async function importAesRaw(rawBytes){ return crypto.subtle.importKey('raw', rawBytes.buffer, 'AES-GCM', false, ['encrypt','decrypt']); }
+    async function encryptRaw(rawKey, plainText){ const key = await importAesRaw(rawKey); const iv = crypto.getRandomValues(new Uint8Array(12)); const enc = new TextEncoder().encode(plainText); const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, enc); return { iv:new Uint8Array(iv), ciphertext:new Uint8Array(ct) }; }
+    async function decryptRaw(rawKey, ivBytes, ctBytes){ const key = await importAesRaw(rawKey); const buf = await crypto.subtle.decrypt({name:'AES-GCM', iv:ivBytes}, key, ctBytes); return new TextDecoder().decode(buf); }
+
+    /* ---------- floating emoji generator ---------- */
+    const floatLayer = document.getElementById('floatLayer');
+    const floatEmojis = ['🌸','🌼','💖','✨','🐻','🍓','🫧','🍭','🌟','💫'];
+    function spawnFloats(count = 26) {
+      floatLayer.innerHTML = '';
+      for (let i=0;i<count;i++){
+        const el = document.createElement('div');
+        el.className = 'float';
+        el.textContent = floatEmojis[Math.floor(Math.random()*floatEmojis.length)];
+        const size = 18 + Math.round(Math.random()*42);
+        el.style.fontSize = size + 'px';
+        el.style.left = Math.random() * 98 + '%';
+        el.style.top = (60 + Math.random()*40) + '%';
+        const duration = 9 + Math.random()*12;
+        el.style.animationDuration = duration + 's';
+        el.style.opacity = (0.6 + Math.random()*0.4).toString();
+        floatLayer.appendChild(el);
+      }
+    }
+
+    /* ---------- UI refs ---------- */
+    const musicUrlInput = document.getElementById('musicUrl');
+    const musicToggle = document.getElementById('musicToggle');
+    const musicVol = document.getElementById('musicVol');
+    const bgUrlInput = document.getElementById('bgUrl');
+    const bgVideo = document.getElementById('bgVideo');
+
+    const recipientEl = document.getElementById('recipient');
+    const messageEl = document.getElementById('message');
+    const encryptEl = document.getElementById('encrypt');
+
+    const stickerButtons = Array.from(document.querySelectorAll('.sticker'));
+    let selectedStickers = [];
+
+    const btnCreate = document.getElementById('btn-create');
+    const btnOpen = document.getElementById('btn-open');
+    const btnShare = document.getElementById('btn-share');
+    const linkbox = document.getElementById('linkbox');
+
+    const viewer = document.getElementById('viewer');
+    const previewRecipient = document.getElementById('previewRecipient');
+    const previewMessage = document.getElementById('previewMessage');
+    const flowerField = document.getElementById('flowerField');
+    const viewerImage = document.getElementById('viewerImage');
+    const backBtn = document.getElementById('btn-back');
+
+    // photo upload / preview
+    const photoInput = document.getElementById('photoInput');
+    const photoThumb = document.getElementById('photoThumb');
+    const removePhoto = document.getElementById('removePhoto');
+    const composerPhotoWrap = document.getElementById('composerPhotoWrap');
+    const composerPhoto = document.getElementById('composerPhoto');
+    let photoDataUrl = null;
+
+    /* ---------- image resize helpers ---------- */
+    function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+    async function resizeImageDataUrl(dataUrl, maxSize=1400, mime='image/jpeg', quality=0.82) {
+      return new Promise((resolve,reject)=>{
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxSize || h > maxSize) {
+            if (w > h) { h = Math.round(h * (maxSize / w)); w = maxSize; } else { w = Math.round(w * (maxSize / h)); h = maxSize; }
+          }
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, w, h);
+          try {
+            const out = c.toDataURL(mime, quality);
+            resolve(out);
+          } catch (e) { reject(e); }
+        };
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+    }
+
+    photoInput.addEventListener('change', async (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      if (f.size > 12_000_000) {
+        if (!confirm('That file is large and may create a very long link. Continue?')) { photoInput.value = ''; return; }
+      }
+      try {
+        const raw = await readFileAsDataURL(f);
+        const resized = await resizeImageDataUrl(raw, 1400, 'image/jpeg', 0.82);
+        photoDataUrl = resized;
+        photoThumb.src = photoDataUrl;
+        photoThumb.style.display = 'block';
+        composerPhoto.src = photoDataUrl;
+        composerPhotoWrap.style.display = 'block';
+        removePhoto.style.display = 'inline-block';
+      } catch (err) {
+        alert('Failed to process image: ' + (err && err.message ? err.message : err));
+      }
+    });
+
+    removePhoto.addEventListener('click', ()=> {
+      photoDataUrl = null;
+      photoThumb.src = '';
+      photoThumb.style.display = 'none';
+      composerPhoto.src = '';
+      composerPhotoWrap.style.display = 'none';
+      removePhoto.style.display = 'none';
+      photoInput.value = '';
+    });
+
+    /* ---------- stickers selection ---------- */
+    stickerButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const s = btn.dataset.s;
+        const idx = selectedStickers.indexOf(s);
+        if (idx >= 0) { selectedStickers.splice(idx,1); btn.classList.remove('selected'); }
+        else { selectedStickers.push(s); btn.classList.add('selected'); }
+      });
+    });
+
+    /* ---------- audio: play without forcing crossOrigin (improves success) ---------- */
+    let audioEl = null, audioPlaying = false;
+    function stopAudio(){
+      if (audioEl) { try { audioEl.pause(); audioEl.currentTime = 0; } catch(e){} audioEl = null; }
+      audioPlaying = false;
+      musicToggle.textContent = 'Play';
+      musicToggle.setAttribute('aria-pressed','false');
+    }
+    function startAudio(url){
+      stopAudio();
+      audioEl = new Audio();
+      audioEl.src = url; // DO NOT set crossOrigin here — many hosts block anonymous fetch; playing as element works more often
+      audioEl.loop = true;
+      audioEl.volume = parseFloat(musicVol.value || 0.28);
+      audioEl.play().then(()=>{ audioPlaying = true; musicToggle.textContent='Pause'; musicToggle.setAttribute('aria-pressed','true'); })
+      .catch(err => {
+        // helpful fallback: try opening the audio in a new tab (user can play there)
+        console.warn('Audio play failed:', err);
+        const tryOpen = confirm('Audio failed to play in this tab (CORS or blocked). Open the audio URL in a new tab to let the recipient play it there?');
+        if (tryOpen) window.open(url, '_blank');
+        stopAudio();
+      });
+    }
+    musicToggle.addEventListener('click', async ()=> {
+      const url = musicUrlInput.value.trim();
+      if (!url) { alert('Paste a direct audio file URL (mp3/ogg) to play.'); return; }
+      if (!audioPlaying) startAudio(url); else stopAudio();
+    });
+    musicVol.addEventListener('input', ()=> { if (audioEl) audioEl.volume = parseFloat(musicVol.value || 0.28); });
+
+    /* ---------- background video ---------- */
+    function setBackgroundVideo(url){
+      const floatLayerEl = document.getElementById('floatLayer');
+      if (!url) { bgVideo.style.display = 'none'; bgVideo.removeAttribute('src'); try{ bgVideo.load(); }catch(e){} floatLayerEl.style.display = 'block'; return; }
+      bgVideo.src = url; bgVideo.style.display = 'block'; floatLayerEl.style.display = 'none'; bgVideo.muted = true;
+      bgVideo.play().catch(e => { console.warn('bg video play failed', e); bgVideo.style.display = 'none'; floatLayerEl.style.display = 'block'; });
+    }
+
+    /* ---------- flower field rendering ---------- */
+    function renderFlowerField(stickers = []) {
+      if (!stickers || stickers.length === 0) { flowerField.style.display = 'none'; flowerField.innerHTML = ''; return; }
+      flowerField.style.display = 'flex';
+      flowerField.innerHTML = '';
+      const palette = stickers;
+      for (let i=0;i<20;i++){
+        const span = document.createElement('span');
+        span.textContent = palette[i % palette.length];
+        span.style.marginLeft = (Math.random()*8 - 4) + 'px';
+        span.style.animationDelay = (Math.random()*3) + 's';
+        span.style.opacity = (0.82 + Math.random()*0.18).toString();
+        flowerField.appendChild(span);
+      }
+    }
+
+    /* ---------- payload creation ---------- */
+    function makeToken(len=24){ const arr = new Uint8Array(len); crypto.getRandomValues(arr); return b64UrlEncode(arr).slice(0,len); }
+
+    async function createPrivateLink(openAfter=false, shareAfter=false) {
+      const recipient = recipientEl.value.trim();
+      const message = messageEl.value.trim();
+      const encrypted = encryptEl.checked;
+      const musicUrl = musicUrlInput.value.trim();
+      const bgUrl = bgUrlInput.value.trim();
+
+      if (!recipient) return alert("Enter recipient's name (e.g. Jamie)");
+      if (!message) return alert('Write a message');
+
+      try {
+        const base = location.origin + location.pathname;
+        const stickers = selectedStickers.slice();
+        const image = photoDataUrl || null;
+
+        if (encrypted) {
+          const rawKey = await generateAesRaw();
+          const enc = await encryptRaw(rawKey, message);
+          const payload = { v:1, t: makeToken(8), r: recipient, iv: b64UrlEncode(enc.iv), ct: b64UrlEncode(enc.ciphertext), enc: true };
+          if (stickers.length) payload.stickers = stickers;
+          if (musicUrl) payload.music = musicUrl;
+          if (bgUrl) payload.bg = bgUrl;
+          if (image) payload.image = image;
+          const payloadB64 = b64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
+          const keyB64 = b64UrlEncode(rawKey);
+          const frag = `m=${payloadB64}&k=${keyB64}`;
+          const full = base + '#' + frag;
+          showLink(full, openAfter, shareAfter);
+        } else {
+          const payload = { v:1, t: makeToken(8), r: recipient, msg: message, enc: false };
+          if (stickers.length) payload.stickers = stickers;
+          if (musicUrl) payload.music = musicUrl;
+          if (bgUrl) payload.bg = bgUrl;
+          if (image) payload.image = image;
+          const payloadB64 = b64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
+          const frag = `m=${payloadB64}`;
+          const full = base + '#' + frag;
+          showLink(full, openAfter, shareAfter);
+        }
+      } catch (err) {
+        alert('Failed to create link: ' + (err && err.message ? err.message : err));
+      }
+    }
+
+    function showLink(url, openAfter=false, shareAfter=false) {
+      linkbox.style.display = 'block';
+      linkbox.textContent = url;
+      try { navigator.clipboard.writeText(url); } catch(_) {}
+      if (openAfter) window.open(url, '_blank');
+      if (shareAfter && navigator.share) navigator.share({title:'A private message for you', url}).catch(()=>{});
+      alert('Link created (copied if allowed). Share only with the intended person.');
+    }
+
+    btnCreate.addEventListener('click', ()=> createPrivateLink(false,false));
+    btnOpen.addEventListener('click', ()=> createPrivateLink(true,false));
+    btnShare.addEventListener('click', ()=> createPrivateLink(false,true));
+
+    backBtn?.addEventListener('click', ()=> {
+      viewer.style.display='none';
+      document.getElementById('composer').style.display='block';
+      history.replaceState(null,'', location.pathname);
+      stopAudio();
+      setBackgroundVideo('');
+    });
+
+    /* ---------- when opening link: decode payload and render ---------- */
+    async function tryShowFromFragment() {
+      const hash = location.hash.replace(/^#/,'');
+      if (!hash) return;
+      const params = new URLSearchParams(hash);
+      const m = params.get('m');
+      if (!m) return;
+      try {
+        const payloadBytes = b64UrlDecodeToUint8(m);
+        const payloadJson = new TextDecoder().decode(payloadBytes);
+        const payload = JSON.parse(payloadJson);
+
+        previewRecipient.textContent = 'For: ' + (payload.r || '(recipient)');
+
+        if (!payload.enc) {
+          previewMessage.textContent = payload.msg || '';
+        } else {
+          const k = params.get('k');
+          if (!k) {
+            previewMessage.innerHTML = '<div class="tiny">This message is encrypted. The decryption key is missing from the link. Ask the sender for the full link (it must include k=... in the fragment).</div>';
+          } else {
+            try {
+              const rawKey = b64UrlDecodeToUint8(k);
+              const iv = b64UrlDecodeToUint8(payload.iv);
+              const ct = b64UrlDecodeToUint8(payload.ct);
+              const plain = await decryptRaw(rawKey, iv, ct);
+              previewMessage.textContent = plain;
+            } catch (e) {
+              previewMessage.textContent = 'Failed to decrypt message — key may be incorrect.';
+            }
+          }
+        }
+
+        renderFlowerField(payload.stickers || []);
+        if (payload.image) {
+          viewerImage.src = payload.image; viewerImage.style.display = 'block';
+        } else {
+          viewerImage.style.display = 'none';
+        }
+
+        if (payload.music) musicUrlInput.value = payload.music;
+        if (payload.bg) { bgUrlInput.value = payload.bg; setBackgroundVideo(payload.bg); }
+        else setBackgroundVideo('');
+
+        viewer.style.display = 'block';
+        document.getElementById('composer').style.display = 'none';
+      } catch (e) {
+        console.error('Failed to decode fragment payload', e);
+      }
+    }
+
+    /* ---------- load ---------- */
+    window.addEventListener('load', ()=> {
+      spawnFloats(28);
+      renderFlowerField([]);
+      tryShowFromFragment();
+    });
+
+    /* preview background on change */
+    bgUrlInput.addEventListener('change', ()=> { setBackgroundVideo(bgUrlInput.value.trim()); });
+
+    // small UX: warn on very long messages
+    messageEl.addEventListener('input', ()=> {
+      const len = messageEl.value.length;
+      const note = document.querySelector('.tiny');
+      if (len > 2000) note.textContent = 'Long messages may create very long links — consider shorter messages.';
+      else note.textContent = 'Pretty, private links — extra cute.';
+    });
+
+    /* ---------- helper re-declarations used above ---------- */
+    function b64UrlEncode(bytes){ return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+    function b64UrlDecodeToUint8(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; const b=atob(s); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i); return u; }
+  </script>
+</body>
+</html>
