@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confession 💌</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Patrick Hand', cursive;
+  min-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.background {
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255,240,248,0.75), rgba(255,255,255,0.92)),
+    url("https://media1.tenor.com/m/_-HvAeF146sAAAAC/anzu-hanashiro-kaoru-touno.gif");
+  background-size: cover;
+  background-position: center bottom;
+  z-index: -1;
+}
+
+.float {
+  position: fixed;
+  top: -30px;
+  font-size: 16px;
+  color: rgba(255, 95, 162, 0.7);
+  pointer-events: none;
+  animation: fall linear infinite;
+  white-space: nowrap;
+  text-shadow: 0 0 6px rgba(255,120,180,0.4);
+}
+
+@keyframes fall {
+  to { transform: translateY(115vh) translateX(20px); }
+}
+
+.envelope {
+  width: min(560px, 90vw);
+  height: min(340px, 55vw);
+  background: linear-gradient(135deg, #ffb6da, #ffd6ea);
+  margin: 160px auto 40px;
+  border-radius: 24px;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 35px 70px rgba(255,120,180,0.45);
+}
+
+.envelope::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-left: 50% solid transparent;
+  border-right: 50% solid transparent;
+  border-top: 55% solid #ff9fcd;
+  transform-origin: top;
+  transition: transform 1s;
+}
+
+.envelope.open::before {
+  transform: rotateX(180deg);
+}
+
+.heart {
+  position: absolute;
+  font-size: 46px;
+  top: 42%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.letter {
+  position: absolute;
+  width: min(500px, 85vw);
+  background:
+    repeating-linear-gradient(#fff, #fff 26px, #fde7f1 27px);
+  border-radius: 22px;
+  padding: 22px;
+  top: 40px;
+  left: 50%;
+  transform: translate(-50%, 180px);
+  opacity: 0;
+  transition: 1s;
+  box-shadow:
+    0 0 25px rgba(255,120,180,0.35),
+    0 25px 45px rgba(0,0,0,0.15);
+}
+
+.envelope.open .letter {
+  opacity: 1;
+  transform: translate(-50%, -120px);
+}
+
+.for-line {
+  text-align: center;
+  font-size: 22px;
+  color: #ff5fa2;
+  margin-bottom: 10px;
+}
+
+.for-line span {
+  color: #ff7eb9;
+}
+
+input, textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  font-family: inherit;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.85);
+}
+
+textarea {
+  height: 90px;
+  resize: none;
+}
+
+.message-box {
+  background: rgba(255,245,250,0.9);
+  border-radius: 16px;
+  padding: 14px;
+  margin-top: 10px;
+  color: #555;
+}
+
+button {
+  margin-top: 8px;
+  padding: 10px 26px;
+  border-radius: 22px;
+  border: none;
+  background: linear-gradient(135deg, #ff7eb9, #ff5fa2);
+  color: white;
+  font-size: 15px;
+}
+
+.spotify {
+  margin: 40px auto 80px;
+  display: flex;
+  justify-content: center;
+}
+
+.spotify iframe {
+  width: min(460px, 90vw);
+}
+</style>
+</head>
+<body>
+
+<div class="background"></div>
+
+<div class="envelope" id="envelope">
+  <div class="heart">💗</div>
+
+  <div class="letter">
+    <div class="for-line">
+      For: <span id="forName">someone special 🌸</span>
+    </div>
+
+    <input id="nameInput" placeholder="Her name..." />
+    <textarea id="messageInput" placeholder="Write your message here..."></textarea>
+
+    <button id="generateBtn">Generate private link 💌</button>
+
+    <div class="message-box">
+      <strong>Message</strong><br><br>
+      <span id="message">Your message will appear here.</span>
+    </div>
+
+    <div id="link" style="font-size:12px;color:#777;margin-top:6px;"></div>
+  </div>
+</div>
+
+<div class="spotify">
+  <iframe style="border-radius:14px"
+    src="https://open.spotify.com/embed/track/1fDFHXcykq4iw8Gg7s5hG9"
+    height="80"
+    allow="autoplay; clipboard-write; encrypted-media">
+  </iframe>
+</div>
+
+<script>
+const envelope = document.getElementById("envelope");
+const messageInput = document.getElementById("messageInput");
+const nameInput = document.getElementById("nameInput");
+const message = document.getElementById("message");
+const forName = document.getElementById("forName");
+const link = document.getElementById("link");
+const generateBtn = document.getElementById("generateBtn");
+
+envelope.addEventListener("click", () => {
+  envelope.classList.add("open");
+});
+
+generateBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const msg = encodeURIComponent(messageInput.value);
+  const name = encodeURIComponent(nameInput.value);
+  link.innerText =
+    location.origin + location.pathname +
+    "?msg=" + msg + "&for=" + name;
+});
+
+const params = new URLSearchParams(location.search);
+if (params.get("msg")) {
+  message.innerText = decodeURIComponent(params.get("msg"));
+  forName.innerText =
+    decodeURIComponent(params.get("for")) || "someone special 🌸";
+
+  messageInput.style.display = "none";
+  nameInput.style.display = "none";
+  generateBtn.style.display = "none";
+  link.style.display = "none";
+
+  envelope.classList.add("open");
+}
+
+const floatingItems = [
+  "🌸","💗","✨","💕","🎀","💞",
+  "I love you","Te amo","Je t’aime","Ti amo",
+  "Ich liebe dich","사랑해","愛してる","我爱你",
+  "Я тебя люблю","Mahal kita","Aku cinta kamu",
+  "Σ’ αγαπώ","Seni seviyorum","أنا أحبك"
+];
+
+function floatItem() {
+  const e = document.createElement("div");
+  e.className = "float";
+  e.innerText = floatingItems[Math.floor(Math.random() * floatingItems.length)];
+  e.style.left = Math.random() * 100 + "vw";
+  e.style.fontSize = 14 + Math.random() * 8 + "px";
+  e.style.animationDuration = 6 + Math.random() * 6 + "s";
+  document.body.appendChild(e);
+  setTimeout(() => e.remove(), 12000);
+}
+
+setInterval(floatItem, 350);
+</script>
+
+</body>
+</html>
