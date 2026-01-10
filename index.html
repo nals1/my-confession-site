@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>For You 💌</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Patrick Hand', cursive;
+    overflow: hidden;
+    text-align: center;
+    height: 100vh;
+}
+
+/* 🌸 Sakura Tree GIF Background */
+.bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(to bottom, rgba(255,230,242,0.7), rgba(255,255,255,0.95)),
+        url("https://media.tenor.com/1aX1dXn8R7UAAAAC/sakura-anime.gif");
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    z-index: -2;
+}
+
+/* Soft blur overlay */
+.bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(2px);
+}
+
+/* Sakura petals */
+.petal {
+    position: absolute;
+    top: -20px;
+    font-size: 18px;
+    animation: fall linear infinite;
+    opacity: 0.8;
+}
+@keyframes fall {
+    to {
+        transform: translateY(110vh) rotate(360deg);
+    }
+}
+
+/* Floating stickers */
+.sticker {
+    position: absolute;
+    font-size: 28px;
+    animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+    50% { transform: translateY(-15px); }
+}
+
+/* Envelope */
+.envelope {
+    width: 320px;
+    height: 200px;
+    background: linear-gradient(135deg, #ffb6d5, #ffcbe5);
+    margin: 110px auto 0;
+    position: relative;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 20px 40px rgba(255,150,190,0.4);
+}
+
+.envelope::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 160px solid transparent;
+    border-right: 160px solid transparent;
+    border-top: 100px solid #ff94c8;
+    top: 0;
+    left: 0;
+    transform-origin: top;
+    transition: transform 1s;
+}
+
+.envelope.open::before {
+    transform: rotateX(180deg);
+}
+
+.heart {
+    position: absolute;
+    font-size: 34px;
+    top: 78px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Letter */
+.letter {
+    position: absolute;
+    width: 280px;
+    height: 320px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(4px);
+    top: 30px;
+    left: 20px;
+    border-radius: 18px;
+    padding: 15px;
+    opacity: 0;
+    transform: translateY(120px);
+    transition: 1s;
+}
+
+.envelope.open .letter {
+    opacity: 1;
+    transform: translateY(-120px);
+}
+
+textarea {
+    width: 100%;
+    height: 90px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    padding: 8px;
+    font-family: inherit;
+    resize: none;
+}
+
+#finalMessage {
+    white-space: pre-line;
+    color: #444;
+    line-height: 1.6;
+    margin-top: 10px;
+}
+
+/* Buttons */
+button {
+    margin-top: 10px;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #ff7eb9, #ff5fa2);
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(255,95,162,0.4);
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.linkBox {
+    margin-top: 8px;
+    font-size: 12px;
+    word-break: break-all;
+    color: #777;
+}
+
+/* Spotify */
+.spotify {
+    margin-top: 25px;
+}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="envelope" onclick="openEnvelope()">
+    <div class="heart">💗</div>
+    <div class="letter">
+        <h3>To You 🌸</h3>
+
+        <textarea id="userText" placeholder="Write your message here..."></textarea>
+
+        <button onclick="generateLink(event)">💌 Generate Link</button>
+
+        <div id="finalMessage"></div>
+        <div class="linkBox" id="linkBox"></div>
+    </div>
+</div>
+
+<!-- 🎵 Spotify Music (change link here) -->
+<div class="spotify">
+<iframe style="border-radius:14px"
+src="https://open.spotify.com/embed/track/4iV5W9uYEdYUVa79Axb7Rh"
+width="320" height="80" frameBorder="0"
+allow="autoplay; clipboard-write; encrypted-media"></iframe>
+</div>
+
+<script>
+function openEnvelope() {
+    document.querySelector('.envelope').classList.add('open');
+}
+
+/* Generate link with message */
+function generateLink(e) {
+    e.stopPropagation();
+    const text = document.getElementById('userText').value;
+    const encoded = encodeURIComponent(text);
+    const link = window.location.origin + window.location.pathname + '?msg=' + encoded;
+    document.getElementById('linkBox').innerText = link;
+}
+
+/* Read message from link */
+const params = new URLSearchParams(window.location.search);
+const msg = params.get('msg');
+
+if (msg) {
+    document.getElementById('userText').style.display = 'none';
+    document.getElementById('finalMessage').innerText = decodeURIComponent(msg);
+}
+
+/* Sakura petals */
+function petal() {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.innerHTML = '🌸';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = 5 + Math.random() * 5 + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 10000);
+}
+setInterval(petal, 260);
+
+/* Stickers */
+['💌','🐻','✨','🍓','💖'].forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'sticker';
+    el.innerHTML = s;
+    el.style.left = 30 + i * 70 + 'px';
+    el.style.top = '82vh';
+    document.body.appendChild(el);
+});
+</script>
+
+</body>
+</html>
